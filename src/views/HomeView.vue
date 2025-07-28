@@ -1,3 +1,10 @@
+<template>
+  <div class="home">
+    <GreenTechImg />
+    <SubmitForm />
+  </div>
+</template>
+
 <style>
 @font-face {
   font-family: "ABeeZee";
@@ -22,13 +29,6 @@ body {
   margin: 0 auto;
 }
 </style>
-
-<template>
-  <div class="home">
-    <GreenTechImg />
-    <SubmitForm />
-  </div>
-</template>
 
 <script lang="ts">
 import { defineComponent } from "vue";

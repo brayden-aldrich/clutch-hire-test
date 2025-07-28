@@ -34,13 +34,23 @@ h1 {
 </style>
 
 <script>
-import { defineComponent } from "vue";
+import { defineComponent, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import GreenTechImg from "@/components/GreenTechImg.vue";
 
 export default defineComponent({
   name: "ThankYouView",
   components: {
     GreenTechImg,
+  },
+  setup() {
+    const router = useRouter();
+    // return to submission form after 5 seconds
+    onMounted(() => {
+      setTimeout(() => {
+        router.push("/");
+      }, 5000);
+    });
   },
 });
 </script>
