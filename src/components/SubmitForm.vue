@@ -18,7 +18,12 @@
     </fieldset>
     <fieldset>
       <legend>Phone Number</legend>
-      <input v-model="phone" class="input-submission" type="tel" />
+      <input
+        v-model="phone"
+        @input="formatPhone"
+        class="input-submission"
+        type="tel"
+      />
     </fieldset>
     <fieldset>
       <legend>Company</legend>
@@ -38,7 +43,14 @@
         </span>
       </p>
     </div>
-    <button type="submit" @click.stop.prevent="submit()">Continue</button>
+
+    <!-- Show loader on click and disable button, else just show "Continue" text -->
+    <button type="submit" :disabled="submitting" @click.stop.prevent="submit()">
+      <div class="button-content">
+        <span v-if="submitting" class="loader"></span>
+        <span v-else>Continue</span>
+      </div>
+    </button>
   </form>
 </template>
 
@@ -66,13 +78,45 @@ button {
   background-color: #0b476c;
   text-align: center;
   align-self: flex-end;
-  padding-top: 10.22px;
-  padding-right: 37.5px;
-  padding-left: 37.5px;
-  padding-bottom: 8.61px;
+  width: 131px;
+  height: 34.83px;
+  padding: 0 37.5px;
   border-radius: 4px;
   margin-top: 51.61px;
   border: none;
+}
+
+button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.button-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 24px;
+  width: 100%;
+}
+
+.loader {
+  width: 24px;
+  height: 24px;
+  border: 5px solid #fff;
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  display: inline-block;
+  box-sizing: border-box;
+  animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 fieldset {
@@ -153,6 +197,8 @@ export default defineComponent({
     const phone = ref("");
     const company = ref("");
 
+    const submitting = ref(false);
+
     const callError = () => {
       error.value = true;
     };
@@ -162,9 +208,33 @@ export default defineComponent({
       errorMessages.value = [];
     };
 
+    // Format phone while typing
+    const formatPhone = () => {
+      let digits = cleanPhoneAndValidate(phone.value).number;
+
+      if (digits.length > 0) {
+        let formatted = "";
+        digits = digits.substring(0, 10);
+
+        if (digits.length <= 3) {
+          formatted = `(${digits})`;
+        } else if (digits.length <= 6) {
+          formatted = `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+        } else {
+          formatted = `(${digits.slice(0, 3)}) ${digits.slice(
+            3,
+            6
+          )}-${digits.slice(6)}`;
+        }
+        phone.value = formatted;
+      }
+    };
+
     // Main form submission function.
     const submit = async () => {
       clearError(); // reset all error values (error, errorMessages)
+
+      submitting.value = true;
       let cleanNumberObj = cleanPhoneAndValidate(phone.value);
       if (
         !(
@@ -175,6 +245,7 @@ export default defineComponent({
           company.value
         )
       ) {
+        submitting.value = false;
         callError();
         return;
       }
@@ -196,6 +267,7 @@ export default defineComponent({
       );
 
       if (req.ok) {
+        submitting.value = false;
         router.push("/submitted");
       } else {
         // grab the error objects on the response and display
@@ -205,7 +277,9 @@ export default defineComponent({
         resp["errors"].forEach((e: APIError) => {
           errorMessages.value.push(e.property);
         });
+
         callError();
+        submitting.value = false;
         return;
       }
     };
@@ -218,8 +292,10 @@ export default defineComponent({
       email,
       phone,
       company,
+      submitting,
       callError,
       clearError,
+      formatPhone,
       submit,
     };
   },
